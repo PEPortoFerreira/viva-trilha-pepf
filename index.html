@@ -152,18 +152,7 @@ function initMap(){
  L.marker(route[route.length-1]).addTo(map).bindPopup('<b>Fim da trilha</b>');
  pois.forEach((p,i)=>L.circleMarker([p.lat,p.lng],{radius:5}).addTo(map).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.description)));
 }
-function startTrail(){
-  showTab('maptab');
-  if(map){
-    setTimeout(()=>{
-      map.invalidateSize();
-      map.fitBounds(L.latLngBounds(route),{padding:[20,20]});
-    },120);
-  }
-  document.getElementById('gpsTitle').textContent='Trilha iniciada';
-  document.getElementById('gpsmsg').textContent='Seu percurso está pronto. Toque em “Ativar GPS” para acompanhar sua posição.';
-  setTimeout(()=>document.getElementById('maptab').scrollIntoView({behavior:'smooth',block:'start'}),180);
-}
+function startTrail(){showTab('maptab');document.getElementById('gpsmsg').textContent='Ative o GPS para acompanhar sua posição.';}
 function locateMe(){
  if(!navigator.geolocation){setGps('GPS indisponível','Este navegador não oferece geolocalização.');return;}
  setGps('Solicitando GPS…','Permita a localização quando o navegador pedir.');
@@ -204,15 +193,15 @@ function finish(){
  document.getElementById('passText').textContent='Você completou a demonstração. A versão final poderá gerar um certificado digital compartilhável.';
 }
 const fauna=[
- ['veado-catingueiro.png','Veado-catingueiro','Observe sem se aproximar.'],
- ['onca-parda.png','Onça-parda','Registro de fauna para educação ambiental.'],
- ['tamandua.png','Tamanduá','Uma das espécies que compõem a biodiversidade local.'],
- ['macaco-prego.png','Macaco-prego','Observe a fauna mantendo distância.'],
- ['papagaio.png','Papagaio','Escute e observe as aves ao longo do percurso.'],
- ['teiú.png','Teiú','Animal silvestre: não alimente.'],
- ['tuvira.png','Tuvira','Elemento da biodiversidade associada aos ambientes aquáticos.']
+ ['Veado-catingueiro.png','Veado-catingueiro','Observe sem se aproximar.'],
+ ['Onça-parda.png','Onça-parda','Registro de fauna para educação ambiental.'],
+ ['Tamanduá.png','Tamanduá','Uma das espécies que compõem a biodiversidade local.'],
+ ['Macaco-prego.png','Macaco-prego','Observe a fauna mantendo distância.'],
+ ['Papagaio.png','Papagaio','Escute e observe as aves ao longo do percurso.'],
+ ['Teiú.png','Teiú','Animal silvestre: não alimente.'],
+ ['Tuvira.png','Tuvira','Elemento da biodiversidade associada aos ambientes aquáticos.']
 ];
-document.getElementById('fauna').innerHTML=fauna.map(x=>'<article class="feature"><img src="'+x[0]+'" onerror="this.parentElement.style.display=\'none\'"><div><b>'+x[1]+'</b><small>'+x[2]+'</small></div></article>').join('');
+document.getElementById('fauna').innerHTML=fauna.map(x=>'<article class="feature"><img src="assets/'+x[0]+'" onerror="this.parentElement.style.display=\'none\'"><div><b>'+x[1]+'</b><small>'+x[2]+'</small></div></article>').join('');
 document.getElementById('photoInput').addEventListener('change',e=>{
  const g=document.getElementById('gallery');g.innerHTML='';
  [...e.target.files].slice(0,12).forEach(f=>{const img=document.createElement('img');img.src=URL.createObjectURL(f);g.appendChild(img);});
