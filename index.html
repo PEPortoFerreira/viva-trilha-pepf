@@ -114,6 +114,19 @@ input[type=file]{width:100%;padding:12px;border:1px dashed #b7c5b5;border-radius
 .start-guide-item span{font-size:13px;color:#647064;line-height:1.45}
 .start-modal-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
 
+.completion-modal{position:fixed;inset:0;background:rgba(20,38,27,.66);display:none;align-items:center;justify-content:center;padding:18px;z-index:11000}
+.completion-modal.open{display:flex}
+.completion-card{width:min(560px,100%);max-height:90vh;overflow:auto;background:#fffdf8;border-radius:28px;padding:28px;box-shadow:0 24px 80px rgba(0,0,0,.3);text-align:center}
+.completion-icon{font-size:58px;line-height:1;margin-bottom:10px}
+.completion-card h2{margin:0 0 8px;color:#234d36;font-size:29px}
+.completion-card .lead{margin:0 auto 20px;color:#647064;line-height:1.55;max-width:470px}
+.completion-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}
+.completion-stat{padding:13px 8px;border-radius:16px;background:#f1f6f1;border:1px solid var(--line)}
+.completion-stat b{display:block;font-size:20px;color:#234d36}
+.completion-stat span{display:block;font-size:12px;color:#647064;margin-top:3px}
+.completion-actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+@media(max-width:430px){.completion-stats{grid-template-columns:1fr 1fr}.completion-stat:last-child{grid-column:1/-1}}
+
 </style><style>
 #diaryText,#visitorName{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;background:#fff}
 #diaryText{resize:vertical;min-height:130px}
@@ -572,7 +585,26 @@ function finish(){
   document.getElementById('passTitle').textContent='Trilha concluída!';
   document.getElementById('passText').textContent='Parabéns! Seu passaporte registra a conclusão da Trilha das Árvores Gigantes.';
   localStorage.setItem('vivaCompleted','1');
+  openCompletionModal();
 }
+function openCompletionModal(){
+  const modal=document.getElementById('completionModal');
+  if(!modal)return;
+  const km=(4.78*progress/100).toFixed(2).replace('.',',')+' km';
+  const discoveries=discovered.size;
+  const seals=document.querySelectorAll('#selos .selo.earned').length;
+  document.getElementById('completionKm').textContent=km;
+  document.getElementById('completionDiscoveries').textContent=discoveries;
+  document.getElementById('completionSeals').textContent=seals+'/7';
+  modal.classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeCompletionModal(){
+  const modal=document.getElementById('completionModal');
+  if(modal)modal.classList.remove('open');
+  document.body.style.overflow='';
+}
+
 function printCertificate(){
   if(progress<100){
     alert('O certificado será liberado após a conclusão de 100% do percurso.');
@@ -714,6 +746,25 @@ restoreLocalData();renderFaunaFreeRecords();renderPOI();update();window.addEvent
     <div class="start-modal-actions">
       <button class="secondary" type="button" onclick="closeStartModal()">Voltar</button>
       <button class="primary" type="button" onclick="confirmStartTrail()">Entendi, começar a trilha</button>
+    </div>
+  </div>
+</div>
+
+<div id="completionModal" class="completion-modal" role="dialog" aria-modal="true" aria-labelledby="completionTitle" onclick="if(event.target===this)closeCompletionModal()">
+  <div class="completion-card">
+    <div class="completion-icon">🌳</div>
+    <div class="tag" style="display:inline-block;margin-bottom:10px">Trilha concluída</div>
+    <h2 id="completionTitle">Parabéns! Você completou a trilha.</h2>
+    <p class="lead">Sua caminhada pela Trilha das Árvores Gigantes chegou ao fim. Confira alguns registros da sua experiência no Passaporte.</p>
+    <div class="completion-stats">
+      <div class="completion-stat"><b id="completionKm">4,78 km</b><span>percurso registrado</span></div>
+      <div class="completion-stat"><b id="completionDiscoveries">0</b><span>descobertas</span></div>
+      <div class="completion-stat"><b id="completionSeals">0/7</b><span>selos conquistados</span></div>
+    </div>
+    <p class="note">Você pode emitir seu certificado de conclusão pelo Passaporte.</p>
+    <div class="completion-actions">
+      <button class="primary" type="button" onclick="closeCompletionModal();document.getElementById('certificateBtn').click()">Emitir meu certificado</button>
+      <button class="secondary" type="button" onclick="closeCompletionModal()">Ver meu passaporte</button>
     </div>
   </div>
 </div>
