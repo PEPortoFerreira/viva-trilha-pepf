@@ -13,7 +13,7 @@
 .top img{width:48px;height:48px;object-fit:contain;border-radius:10px;background:#ffffff16;padding:4px}
 .top small{opacity:.75;display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase}
 .top b{font-size:19px}
-.hero{min-height:430px;padding:26px 20px;display:flex;align-items:end;background:linear-gradient(0deg,#0009,#0000 65%),url('capa-trilha-arvores-gigantes.jpg') center/cover}
+.hero{min-height:430px;padding:26px 20px;display:flex;align-items:end;background:linear-gradient(0deg,#0009,#0000 65%),url('trilha.png') center/cover}
 .hero-card{background:#fffffff4;border-radius:22px;padding:20px;max-width:700px;box-shadow:0 12px 40px #0003}
 .hero-card .tag{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--forest2);font-weight:900}
 .hero-card h1{font-family:Georgia,serif;font-size:38px;line-height:1.05;margin:7px 0}
@@ -96,7 +96,7 @@ input[type=file]{width:100%;padding:12px;border:1px dashed #b7c5b5;border-radius
 </section>
 
 <section id="discover">
-<div class="section-head"><div><h2>Descobertas</h2><div class="muted">Pontos interpretativos do mapa original.</div></div><b id="foundCount">0 encontrados</b></div>
+<div class="section-head"><div><h2>Descobertas</h2><div class="muted">Pontos do percurso e registros de fauna para observar durante a caminhada.</div></div><b id="foundCount">0 encontrados</b></div>
 <div class="poi-grid" id="poiList"></div>
 <div style="margin-top:18px"><h2>Fauna para observar</h2><div class="feature-grid" id="fauna"></div></div>
 </section>
@@ -205,15 +205,13 @@ function finish(){
  document.getElementById('passText').textContent='Você completou a demonstração. A versão final poderá gerar um certificado digital compartilhável.';
 }
 const fauna=[
- ['Veado-catingueiro.png','Veado-catingueiro','Observe sem se aproximar.'],
- ['Onça-parda.png','Onça-parda','Registro de fauna para educação ambiental.'],
- ['Tamanduá.png','Tamanduá','Uma das espécies que compõem a biodiversidade local.'],
- ['Macaco-prego.png','Macaco-prego','Observe a fauna mantendo distância.'],
- ['Papagaio.png','Papagaio','Escute e observe as aves ao longo do percurso.'],
- ['Teiú.png','Teiú','Animal silvestre: não alimente.'],
- ['Tuvira.png','Tuvira','Elemento da biodiversidade associada aos ambientes aquáticos.']
+ ['veado-catingueiro.png','Veado-catingueiro','Registro de fauna apresentado no projeto. Observe sem se aproximar e sem alimentar.'],
+ ['onca-parda.png','Onça-parda','Registro de fauna apresentado no projeto. A observação deve ser feita com distância e segurança.'],
+ ['tamandua.png','Tamanduá','Registro de fauna apresentado no projeto. Observe sem se aproximar e sem alimentar.'],
+ ['macaco-prego.png','Macaco-prego','Registro de fauna apresentado no projeto. Observe sem se aproximar e sem alimentar.'],
+ ['papagaio.png','Papagaio','Registro de fauna apresentado no projeto. Observe e escute as aves sem interferir.']
 ];
-document.getElementById('fauna').innerHTML=fauna.map(x=>'<article class="feature"><img src="assets/'+x[0]+'" onerror="this.parentElement.style.display=\'none\'"><div><b>'+x[1]+'</b><small>'+x[2]+'</small></div></article>').join('');
+document.getElementById('fauna').innerHTML=fauna.map(x=>'<article class="feature"><img src="'+x[0]+'" alt="'+x[1]+'" onerror="this.parentElement.style.display=\'none\'"><div><b>'+x[1]+'</b><small>'+x[2]+'</small></div></article>').join('');
 document.getElementById('photoInput').addEventListener('change',e=>{
  const g=document.getElementById('gallery');g.innerHTML='';
  [...e.target.files].slice(0,12).forEach(f=>{const img=document.createElement('img');img.src=URL.createObjectURL(f);g.appendChild(img);});
