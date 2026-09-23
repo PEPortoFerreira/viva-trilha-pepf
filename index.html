@@ -95,6 +95,13 @@ input[type=file]{width:100%;padding:12px;border:1px dashed #b7c5b5;border-radius
 <div class="section-head"><div><h2>Seu percurso</h2><div class="muted">Acompanhe sua caminhada pelo mapa.</div></div><button class="secondary" onclick="locateMe()">Ativar GPS</button></div>
 <div id="map"></div>
 <div class="status"><span class="dot"></span><div><b id="gpsTitle">GPS aguardando</b><div class="note" id="gpsmsg">Toque em “Ativar GPS” e permita a localização no navegador.</div></div></div>
+
+<div id="discoveryAlert" class="card" style="display:none;margin-top:12px;border-left:5px solid #2f6b45">
+  <div style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#55705d">Nova descoberta</div>
+  <h3 id="discoveryTitle" style="margin:5px 0 3px">Você chegou a um ponto da trilha!</h3>
+  <p id="discoveryText" class="muted" style="margin:0"></p>
+  <button class="primary" style="margin-top:10px" onclick="hideDiscovery()">Registrar descoberta</button>
+</div>
 <div class="stats">
 <div class="stat"><strong id="km">0,00 km</strong><span>distância registrada</span></div>
 <div class="stat"><strong id="pct">0%</strong><span>progresso</span></div>
@@ -118,7 +125,7 @@ input[type=file]{width:100%;padding:12px;border:1px dashed #b7c5b5;border-radius
 </section>
 
 <section id="discover">
-<div class="section-head"><div><h2>Descobertas</h2><div class="muted">Pontos do percurso e registros de fauna para observar durante a caminhada.</div></div><b id="foundCount">0 encontrados</b></div>
+<div class="section-head"><div><h2>Descobertas</h2><div class="muted">Aproxime-se dos pontos do percurso para registrar novas descobertas.</div></div><b id="foundCount">0 encontrados</b></div>
 <div class="poi-grid" id="poiList"></div>
 <div style="margin-top:18px"><h2>Fauna para observar</h2><div class="feature-grid" id="fauna"></div></div>
 </section>
@@ -251,6 +258,42 @@ function applyGpsProgress(){
 }
 
 function startTrail(){showTab('maptab');document.getElementById('gpsTitle').textContent='Trilha iniciada';document.getElementById('gpsmsg').textContent='Seu percurso está pronto. Toque em “Ativar GPS” para acompanhar sua posição.';setTimeout(()=>{const sec=document.getElementById('maptab');sec.scrollIntoView({behavior:'smooth',block:'start'});if(map){map.invalidateSize();map.fitBounds(L.latLngBounds(route),{padding:[20,20]});}},120);}
+
+let lastDiscoveryName='';
+let discoveryTimer=null;
+function showDiscovery(p){
+ const box=document.getElementById('discoveryAlert');
+ if(!box)return;
+ document.getElementById('discoveryTitle').textContent='Você chegou a: '+p.name;
+ document.getElementById('discoveryText').textContent=p.description;
+ box.style.display='block';
+ lastDiscoveryName=p.name;
+ clearTimeout(discoveryTimer);
+ discoveryTimer=setTimeout(()=>{ if(box.style.display!=='none') hideDiscovery(); },12000);
+}
+function hideDiscovery(){
+ const box=document.getElementById('discoveryAlert');
+ if(box)box.style.display='none';
+ if(lastDiscoveryName){
+   discovered.add(lastDiscoveryName);
+   update();
+   renderDesafios();
+ }
+}
+function checkNearbyPOI(ll){
+ let nearest=null, nearestM=Infinity;
+ for(const p of pois){
+   const d=haversineKm(ll,[p.lat,p.lng])*1000;
+   if(d<nearestM){nearestM=d;nearest=p;}
+ }
+ if(nearest && nearestM<=35 && nearest.name!==lastDiscoveryName){
+   discovered.add(nearest.name);
+   update();
+   renderDesafios();
+   showDiscovery(nearest);
+ }
+}
+
 function locateMe(){
  if(!navigator.geolocation){setGps('GPS indisponível','Este navegador não oferece geolocalização.');return;}
  setGps('Solicitando GPS…','Permita a localização quando o navegador pedir.');
@@ -261,6 +304,7 @@ function locateMe(){
    else marker.setLatLng(ll);
    marker.getPopup().setContent('<b>Você está aqui</b><br>Precisão aproximada: '+Math.round(pos.coords.accuracy)+' m');
    map.setView(ll,17);
+   checkNearbyPOI(ll);
    if(nearestRouteDistanceM(ll)<=120){
      if(lastGpsPoint){
        const step=haversineKm(lastGpsPoint,ll);
