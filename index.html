@@ -101,6 +101,19 @@ input[type=file]{width:100%;padding:12px;border:1px dashed #b7c5b5;border-radius
 .discovery-modal-card p{margin:0;color:#647064;line-height:1.55}
 .discovery-modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
 
+
+.start-modal{position:fixed;inset:0;background:rgba(20,38,27,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:10000}
+.start-modal.open{display:flex}
+.start-modal-card{width:min(560px,100%);max-height:min(88vh,760px);overflow:auto;background:#fff;border-radius:24px;padding:24px;box-shadow:0 20px 70px rgba(0,0,0,.28)}
+.start-modal-card h2{margin:0 0 8px;font-size:26px}
+.start-modal-card .lead{margin:0 0 18px;color:#647064;line-height:1.55}
+.start-guide{display:grid;gap:10px}
+.start-guide-item{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:15px;background:#fafcf9}
+.start-guide-icon{font-size:22px;line-height:1.2;min-width:28px;text-align:center}
+.start-guide-item b{display:block;margin-bottom:3px}
+.start-guide-item span{font-size:13px;color:#647064;line-height:1.45}
+.start-modal-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+
 </style><style>
 #diaryText,#visitorName{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;background:#fff}
 #diaryText{resize:vertical;min-height:130px}
@@ -318,7 +331,29 @@ function applyGpsProgress(){
  }
 }
 
-function startTrail(){showTab('maptab');document.getElementById('gpsTitle').textContent='Trilha iniciada';document.getElementById('gpsmsg').textContent='Seu percurso está pronto. Toque em “Ativar GPS” para acompanhar sua posição.';setTimeout(()=>{const sec=document.getElementById('maptab');sec.scrollIntoView({behavior:'smooth',block:'start'});if(map){map.invalidateSize();map.fitBounds(L.latLngBounds(route),{padding:[20,20]});}},120);}
+function startTrail(){
+ const modal=document.getElementById('startModal');
+ if(modal){modal.classList.add('open');document.body.style.overflow='hidden';}
+}
+function closeStartModal(){
+ const modal=document.getElementById('startModal');
+ if(modal)modal.classList.remove('open');
+ document.body.style.overflow='';
+}
+function confirmStartTrail(){
+ closeStartModal();
+ showTab('maptab');
+ document.getElementById('gpsTitle').textContent='Trilha iniciada';
+ document.getElementById('gpsmsg').textContent='Seu percurso está pronto. Toque em “Ativar GPS” para acompanhar sua posição.';
+ setTimeout(()=>{
+   const sec=document.getElementById('maptab');
+   sec.scrollIntoView({behavior:'smooth',block:'start'});
+   if(map){map.invalidateSize();map.fitBounds(L.latLngBounds(route),{padding:[20,20]});}
+ },120);
+}
+
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeStartModal();});
 
 let lastDiscoveryName='';
 let discoveryTimer=null;
@@ -663,5 +698,24 @@ restoreLocalData();renderFaunaFreeRecords();renderPOI();update();window.addEvent
   </div>
 </div>
 
+
+<div id="startModal" class="start-modal" role="dialog" aria-modal="true" aria-labelledby="startModalTitle">
+  <div class="start-modal-card">
+    <div class="tag" style="display:inline-block;margin-bottom:10px">Antes de começar</div>
+    <h2 id="startModalTitle">Vamos cuidar da trilha juntos?</h2>
+    <p class="lead">Alguns cuidados simples ajudam você a aproveitar a caminhada e respeitar a natureza.</p>
+    <div class="start-guide">
+      <div class="start-guide-item"><div class="start-guide-icon">🥾</div><div><b>Permaneça no percurso</b><span>Siga a trilha sinalizada e observe as orientações do Parque. Evite entrar em caminhos restritos.</span></div></div>
+      <div class="start-guide-item"><div class="start-guide-icon">🐾</div><div><b>Observe a fauna à distância</b><span>Não tente tocar, alimentar, perseguir ou se aproximar de animais silvestres. O melhor registro é aquele que respeita o espaço do animal.</span></div></div>
+      <div class="start-guide-item"><div class="start-guide-icon">🌿</div><div><b>Deixe a natureza como encontrou</b><span>Não retire plantas, sementes ou outros elementos naturais. Leve seus resíduos com você.</span></div></div>
+      <div class="start-guide-item"><div class="start-guide-icon">📱</div><div><b>Use o GPS durante a caminhada</b><span>Para registrar distância e liberar descobertas, mantenha o GPS ativado e permita o acesso à localização no navegador.</span></div></div>
+      <div class="start-guide-item"><div class="start-guide-icon">👀</div><div><b>Caminhe com atenção</b><span>Observe sons, rastros, árvores, água e outros sinais da floresta. Nem sempre a fauna será visível — e tudo bem.</span></div></div>
+    </div>
+    <div class="start-modal-actions">
+      <button class="secondary" type="button" onclick="closeStartModal()">Voltar</button>
+      <button class="primary" type="button" onclick="confirmStartTrail()">Entendi, começar a trilha</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
