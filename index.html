@@ -19,7 +19,7 @@
 .hero-card h1{font-family:Georgia,serif;font-size:38px;line-height:1.05;margin:7px 0}
 .hero-card p{color:var(--muted);margin:0 0 16px;line-height:1.5}
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 15px} .chip{background:#edf3ea;color:var(--forest);font-weight:800;padding:7px 10px;border-radius:99px;font-size:12px}
-button{font:inherit;border:0;border-radius:13px;padding:12px 15px;font-weight:850;cursor:pointer}
+button{font:inherit;border:0;border-radius:13px;padding:12px 15px;font-weight:850;cursor:pointer}.primary:disabled{background:#dfe5e0;color:#7b857e;cursor:not-allowed;opacity:1}
 .primary{background:var(--forest);color:#fff} .secondary{background:#eaf0e8;color:var(--forest)}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .nav{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:10px 12px;border-bottom:1px solid var(--line);position:sticky;top:78px;background:#fffdf8ee;backdrop-filter:blur(10px);z-index:900}
@@ -178,7 +178,7 @@ input[type=file]{width:100%;padding:12px;border:1px dashed #b7c5b5;border-radius
 <div id="passportItems" class="note" style="margin-top:9px">Nenhuma ainda.</div></div>
 </div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-<button class="primary" onclick="finish()">Concluir trilha</button>
+<button id="finishBtn" class="primary" onclick="finish()" disabled>Complete a trilha para concluir</button>
 <button class="secondary" onclick="printPassport()">Imprimir / salvar passaporte</button>
 <button id="certificateBtn" class="secondary" onclick="printCertificate()" style="display:none">Emitir certificado de conclusão</button>
 </div>
@@ -353,10 +353,15 @@ function update(){
   document.getElementById('passBar').style.width=progress+'%';
   const certBtn=document.getElementById('certificateBtn');
   const certStatus=document.getElementById('certificateStatus');
+  const finishBtn=document.getElementById('finishBtn');
   if(certBtn && certStatus){
     const done=progress>=100;
     certBtn.style.display=done?'inline-block':'none';
     certStatus.textContent=done?'Certificado liberado: você concluiu o percurso georreferenciado.':'Complete 100% do percurso para liberar o certificado de conclusão.';
+    if(finishBtn){
+      finishBtn.disabled=!done;
+      finishBtn.textContent=done?'Concluir trilha':'Complete a trilha para concluir';
+    }
   }
   localStorage.setItem('vivaProgress',String(progress));
   localStorage.setItem('vivaDiscovered',JSON.stringify([...discovered]));
@@ -424,11 +429,7 @@ function registerPoiFromModal(){
  closePoiModal();
 }
 function finish(){
-  if(progress<100){
-    showTab('pass');
-    alert('A conclusão será liberada quando o GPS registrar 100% do percurso da trilha.');
-    return;
-  }
+  if(progress<100){ return; }
   update();showTab('pass');
   document.getElementById('passTitle').textContent='Trilha concluída!';
   document.getElementById('passText').textContent='Parabéns! Seu passaporte registra a conclusão da Trilha das Árvores Gigantes.';
