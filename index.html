@@ -413,20 +413,7 @@ function printPassport(){
   const items=discovered.size?[...discovered].map(x=>'<li>'+esc(x)+'</li>').join(''):'<li>Nenhuma descoberta registrada</li>';
   const w=window.open('','_blank');
   if(!w){alert('O navegador bloqueou a nova janela. Permita pop-ups para imprimir o passaporte.');return;}
-  w.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Passaporte da Trilha</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:30px;border:2px solid #234d36;border-radius:20px;color:#173523}h1{margin-bottom:4px}h2{color:#234d36}.meta{color:#666}.box{padding:16px;background:#f4f7f4;border-radius:12px;margin:18px 0}li{margin:7px 0}@media print{body{margin:0;border:0}}</style></head><body><div style="text-align:center"><div style="font-size:48px">🌳</div><h1>Passaporte da Trilha</h1><div>Trilha das Árvores Gigantes · Parque Estadual de Porto Ferreira</div></div><div class="box"><h2>'+esc(name)+'</h2><div class="meta">Data: '+date+'</div><div class="meta">Percurso: 4,78 km (rota georreferenciada)</div><div class="meta">Progresso: '+Math.round(progress)+'%</div></div><h2>Descobertas registradas</h2><ul>'+items+'</ul><p style="margin-top:35px">Registro digital da experiência de visita.</p><script>window.onload=function(){window.print()}<\/script>
-<div id="poiModal" class="discovery-modal" onclick="if(event.target===this)closePoiModal()">
-  <div class="discovery-modal-card">
-    <div class="modal-icon" id="poiModalIcon">🌿</div>
-    <h3 id="poiModalTitle">Descoberta</h3>
-    <p id="poiModalText"></p>
-    <div class="discovery-modal-actions">
-      <button class="primary" id="poiModalAction" onclick="registerPoiFromModal()">Registrar descoberta</button>
-      <button class="secondary" onclick="closePoiModal()">Fechar</button>
-    </div>
-  </div>
-</div>
-
-</body></html>');
+  w.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Passaporte da Trilha</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:30px;border:2px solid #234d36;border-radius:20px;color:#173523}h1{margin-bottom:4px}h2{color:#234d36}.meta{color:#666}.box{padding:16px;background:#f4f7f4;border-radius:12px;margin:18px 0}li{margin:7px 0}@media print{body{margin:0;border:0}}</style></head><body><div style="text-align:center"><div style="font-size:48px">🌳</div><h1>Passaporte da Trilha</h1><div>Trilha das Árvores Gigantes · Parque Estadual de Porto Ferreira</div></div><div class="box"><h2>'+esc(name)+'</h2><div class="meta">Data: '+date+'</div><div class="meta">Percurso: 4,78 km (rota georreferenciada)</div><div class="meta">Progresso: '+Math.round(progress)+'%</div></div><h2>Descobertas registradas</h2><ul>'+items+'</ul><p style="margin-top:35px">Registro digital da experiência de visita.</p><script>window.onload=function(){window.print()}<\/script></body></html>');
   w.document.close();
 }
 function restoreLocalData(){
@@ -451,5 +438,18 @@ document.getElementById('photoInput').addEventListener('change',e=>{
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 restoreLocalData();renderPOI();update();window.addEventListener('load',initMap);
 </script>
+
+<div id="poiModal" class="discovery-modal" onclick="if(event.target===this)closePoiModal()">
+  <div class="discovery-modal-card">
+    <div class="modal-icon" id="poiModalIcon">🌿</div>
+    <h3 id="poiModalTitle">Descoberta</h3>
+    <p id="poiModalText"></p>
+    <div class="discovery-modal-actions">
+      <button class="primary" id="poiModalAction" onclick="registerPoiFromModal()">Registrar descoberta</button>
+      <button class="secondary" onclick="closePoiModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
