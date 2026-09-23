@@ -58,6 +58,22 @@ input[type=file]{width:100%;padding:12px;border:1px dashed #b7c5b5;border-radius
 .pass-card{margin:18px auto;padding:18px;border:1px solid var(--line);border-radius:18px;text-align:left;max-width:600px;background:#fff}
 .note{font-size:11px;line-height:1.5;color:var(--muted)} footer{padding:22px;text-align:center;color:var(--muted);font-size:11px;border-top:1px solid var(--line)}
 @media(max-width:650px){.hero{min-height:410px}.hero-card h1{font-size:32px}.poi-grid,.feature-grid{grid-template-columns:1fr}#map{height:390px}.nav{top:78px}}
+
+.poi{cursor:pointer;transition:transform .18s,box-shadow .18s}
+.poi:hover{transform:translateY(-2px);box-shadow:0 5px 18px rgba(30,70,45,.10)}
+.poi.locked{opacity:.72}
+.poi.found{background:#f4faf5;border-color:#bdd4c0}
+.poi .status{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-top:5px;color:#66766a}
+.poi.found .status{color:#2f6b45}
+.poi.locked .status{color:#7d817d}
+.discovery-modal{position:fixed;inset:0;background:rgba(20,38,27,.52);display:none;align-items:center;justify-content:center;padding:20px;z-index:9999}
+.discovery-modal.open{display:flex}
+.discovery-modal-card{width:min(520px,100%);background:#fff;border-radius:24px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.discovery-modal-card .modal-icon{font-size:34px;margin-bottom:8px}
+.discovery-modal-card h3{margin:0 0 8px;font-size:24px}
+.discovery-modal-card p{margin:0;color:#647064;line-height:1.55}
+.discovery-modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+
 </style><style>
 #diaryText,#visitorName{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;background:#fff}
 #diaryText{resize:vertical;min-height:130px}
@@ -274,11 +290,6 @@ function showDiscovery(p){
 function hideDiscovery(){
  const box=document.getElementById('discoveryAlert');
  if(box)box.style.display='none';
- if(lastDiscoveryName){
-   discovered.add(lastDiscoveryName);
-   update();
-   renderDesafios();
- }
 }
 function checkNearbyPOI(ll){
  let nearest=null, nearestM=Infinity;
@@ -287,10 +298,9 @@ function checkNearbyPOI(ll){
    if(d<nearestM){nearestM=d;nearest=p;}
  }
  if(nearest && nearestM<=35 && nearest.name!==lastDiscoveryName){
-   discovered.add(nearest.name);
-   update();
-   renderDesafios();
-   showDiscovery(nearest);
+   const idx=pois.indexOf(nearest);
+   if(idx>=0)openPoiModal(idx);
+   lastDiscoveryName=nearest.name;
  }
 }
 
@@ -342,8 +352,41 @@ function update(){
   localStorage.setItem('vivaDiscovered',JSON.stringify([...discovered]));
   renderPOI();
 }
+let selectedPoiIndex=null;
 function renderPOI(){
- document.getElementById('poiList').innerHTML=pois.map((p,i)=>'<article class="poi '+(discovered.has(p.name)?'found':'')+'"><div class="poi-top"><div class="num">'+(discovered.has(p.name)?'✓':i+1)+'</div><div><h3>'+esc(p.name)+'</h3><p>'+esc(p.description)+'</p></div></div></article>').join('');
+ const box=document.getElementById('poiList');
+ box.innerHTML=pois.map((p,i)=>{
+   const found=discovered.has(p.name);
+   return '<article class="poi '+(found?'found':'locked')+'" role="button" tabindex="0" onclick="openPoiModal('+i+')" onkeydown="if(event.key===\'Enter\')openPoiModal('+i+')">'+
+     '<div class="poi-top"><div class="num">'+(found?'✓':i+1)+'</div><div>'+
+     '<h3>'+esc(p.name)+'</h3><p>'+esc(p.description)+'</p>'+
+     '<div class="status">'+(found?'✓ Descoberta registrada':'🔒 Ainda não descoberta')+'</div>'+
+     '</div></div></article>';
+ }).join('');
+}
+function openPoiModal(i){
+ const p=pois[i]; if(!p)return;
+ selectedPoiIndex=i;
+ const found=discovered.has(p.name);
+ document.getElementById('poiModalTitle').textContent=p.name;
+ document.getElementById('poiModalText').textContent=p.description;
+ document.getElementById('poiModalIcon').textContent=found?'✓':'🌿';
+ const btn=document.getElementById('poiModalAction');
+ btn.textContent=found?'Descoberta já registrada':'Registrar descoberta';
+ btn.style.display=found?'none':'inline-block';
+ document.getElementById('poiModal').classList.add('open');
+}
+function closePoiModal(){
+ document.getElementById('poiModal').classList.remove('open');
+ selectedPoiIndex=null;
+}
+function registerPoiFromModal(){
+ if(selectedPoiIndex===null)return;
+ const p=pois[selectedPoiIndex]; if(!p)return;
+ discovered.add(p.name);
+ update();
+ renderDesafios();
+ closePoiModal();
 }
 function finish(){
   progress=100;update();showTab('pass');
@@ -370,7 +413,20 @@ function printPassport(){
   const items=discovered.size?[...discovered].map(x=>'<li>'+esc(x)+'</li>').join(''):'<li>Nenhuma descoberta registrada</li>';
   const w=window.open('','_blank');
   if(!w){alert('O navegador bloqueou a nova janela. Permita pop-ups para imprimir o passaporte.');return;}
-  w.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Passaporte da Trilha</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:30px;border:2px solid #234d36;border-radius:20px;color:#173523}h1{margin-bottom:4px}h2{color:#234d36}.meta{color:#666}.box{padding:16px;background:#f4f7f4;border-radius:12px;margin:18px 0}li{margin:7px 0}@media print{body{margin:0;border:0}}</style></head><body><div style="text-align:center"><div style="font-size:48px">🌳</div><h1>Passaporte da Trilha</h1><div>Trilha das Árvores Gigantes · Parque Estadual de Porto Ferreira</div></div><div class="box"><h2>'+esc(name)+'</h2><div class="meta">Data: '+date+'</div><div class="meta">Percurso: 4,78 km (rota georreferenciada)</div><div class="meta">Progresso: '+Math.round(progress)+'%</div></div><h2>Descobertas registradas</h2><ul>'+items+'</ul><p style="margin-top:35px">Registro digital da experiência de visita.</p><script>window.onload=function(){window.print()}<\/script></body></html>');
+  w.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Passaporte da Trilha</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:30px;border:2px solid #234d36;border-radius:20px;color:#173523}h1{margin-bottom:4px}h2{color:#234d36}.meta{color:#666}.box{padding:16px;background:#f4f7f4;border-radius:12px;margin:18px 0}li{margin:7px 0}@media print{body{margin:0;border:0}}</style></head><body><div style="text-align:center"><div style="font-size:48px">🌳</div><h1>Passaporte da Trilha</h1><div>Trilha das Árvores Gigantes · Parque Estadual de Porto Ferreira</div></div><div class="box"><h2>'+esc(name)+'</h2><div class="meta">Data: '+date+'</div><div class="meta">Percurso: 4,78 km (rota georreferenciada)</div><div class="meta">Progresso: '+Math.round(progress)+'%</div></div><h2>Descobertas registradas</h2><ul>'+items+'</ul><p style="margin-top:35px">Registro digital da experiência de visita.</p><script>window.onload=function(){window.print()}<\/script>
+<div id="poiModal" class="discovery-modal" onclick="if(event.target===this)closePoiModal()">
+  <div class="discovery-modal-card">
+    <div class="modal-icon" id="poiModalIcon">🌿</div>
+    <h3 id="poiModalTitle">Descoberta</h3>
+    <p id="poiModalText"></p>
+    <div class="discovery-modal-actions">
+      <button class="primary" id="poiModalAction" onclick="registerPoiFromModal()">Registrar descoberta</button>
+      <button class="secondary" onclick="closePoiModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+</body></html>');
   w.document.close();
 }
 function restoreLocalData(){
