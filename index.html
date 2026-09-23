@@ -353,6 +353,23 @@ function update(){
   localStorage.setItem('vivaDiscovered',JSON.stringify([...discovered]));
   renderPOI();
 }
+const educationalNotes={'Trilha das Árvores Gigantes':'Ponto de interpretação da Trilha das Árvores Gigantes. Observe a paisagem e perceba as diferentes formas, alturas e texturas da vegetação ao longo do percurso.',
+'Pimenta de macaco':'Ponto de interpretação botânica da trilha. Observe a vegetação ao redor e compare folhas, formas e texturas sem retirar partes das plantas.',
+'Bosque dos Jerivás':'Observe a paisagem e a presença dos jerivás. Repare na composição da vegetação e no ambiente ao redor do caminho.',
+'Tamanqueira':'Espécie apresentada no percurso interpretativo. Observe a planta no ambiente natural, sem tocar ou retirar partes.',
+'500 metros':'Marco de distância da caminhada. Use este ponto para perceber quanto você já avançou e observar como a paisagem muda ao longo do percurso.',
+'Cerrado':'Área de transição e observação da vegetação. Compare as características da paisagem com os trechos de mata encontrados durante a caminhada.',
+'Barbatimão Falso':'Ponto de interpretação da flora. Observe a espécie em seu ambiente natural e registre sua descoberta sem interferir na vegetação.',
+'Cotó':'Ponto de interpretação da flora. Observe atentamente a vegetação indicada no percurso e siga a caminhada sem retirar materiais naturais.',
+'Óleo de copaíba':'Conheça uma das espécies destacadas no percurso. Observe sua presença no ambiente e valorize a conservação da vegetação.',
+'1000 m':'Marco de distância da caminhada. Você já percorreu aproximadamente 1 km do percurso georreferenciado.',
+'Cabreúva':'Ponto de interpretação botânica do percurso. Observe a árvore e a vegetação ao redor, respeitando o ambiente natural.',
+'Jequitibá-rosa':'Ponto de destaque da trilha. Observe a dimensão e a presença da árvore na paisagem, mantendo distância e sem causar danos.',
+'Peroba grávida':'Ponto de interpretação da vegetação. Observe a forma da árvore e as características do ambiente ao redor.',
+"Pau-d'alho":'Ponto de interpretação da flora. Observe a espécie no ambiente natural e siga a trilha sem retirar folhas, galhos ou outras partes.',
+'Ribeirão dos Patos':'Ponto de destaque da paisagem e da água no percurso. Observe o ambiente ao redor e mantenha a área limpa.',
+'Bancos para descanso':'Ponto indicado para pausa. Aproveite para descansar, hidratar-se e observar os sons e movimentos da mata.',
+'Caminho restrito':'Trecho indicado como restrito no mapa. Não ultrapasse a área sinalizada e siga sempre pelo percurso permitido.'};
 let selectedPoiIndex=null;
 function renderPOI(){
  const box=document.getElementById('poiList');
@@ -372,6 +389,7 @@ function openPoiModal(i){
  const unlocked=proximityUnlocked.has(p.name);
  document.getElementById('poiModalTitle').textContent=p.name;
  document.getElementById('poiModalText').textContent=p.description;
+ document.getElementById('poiModalLearn').textContent=educationalNotes[p.name]||'Observe este ponto com atenção e respeite a vegetação, a fauna e as orientações do Parque.';
  document.getElementById('poiModalIcon').textContent=found?'✓':(unlocked?'🌿':'🔒');
  const btn=document.getElementById('poiModalAction');
  btn.textContent=found?'Descoberta já registrada':(unlocked?'Registrar descoberta':'Aproxime-se do ponto com o GPS');
@@ -463,6 +481,7 @@ restoreLocalData();renderPOI();update();window.addEventListener('load',initMap);
     <div class="modal-icon" id="poiModalIcon">🌿</div>
     <h3 id="poiModalTitle">Descoberta</h3>
     <p id="poiModalText"></p>
+    <div id="poiModalLearn" style="margin-top:14px;padding:14px;border-radius:16px;background:#f4f8f4;color:#405247;line-height:1.5;font-size:14px"></div>
     <div class="discovery-modal-actions">
       <button class="primary" id="poiModalAction" onclick="registerPoiFromModal()">Registrar descoberta</button>
       <button class="secondary" onclick="closePoiModal()">Fechar</button>
