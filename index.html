@@ -180,8 +180,10 @@ input[type=file]{width:100%;padding:12px;border:1px dashed #b7c5b5;border-radius
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
 <button class="primary" onclick="finish()">Concluir trilha</button>
 <button class="secondary" onclick="printPassport()">Imprimir / salvar passaporte</button>
+<button id="certificateBtn" class="secondary" onclick="printCertificate()" style="display:none">Emitir certificado de conclusão</button>
 </div>
-<p class="note" style="margin-top:12px">O passaporte é um registro digital no aparelho do visitante. A versão impressa pode ser salva em PDF pelo navegador.</p>
+<p id="certificateStatus" class="note" style="margin-top:12px">Complete 100% do percurso para liberar o certificado de conclusão.</p>
+<p class="note">O passaporte é um registro digital no aparelho do visitante. A versão impressa pode ser salva em PDF pelo navegador.</p>
 </div>
 </section>
 
@@ -349,6 +351,13 @@ function update(){
   document.getElementById('passportItems').innerHTML=discovered.size?[...discovered].map(x=>'• '+esc(x)).join('<br>'):'Nenhuma ainda.';
   document.getElementById('passProgress').textContent=Math.round(progress)+'% concluído · '+(4.78*progress/100).toFixed(2).replace('.',',')+' km';
   document.getElementById('passBar').style.width=progress+'%';
+  const certBtn=document.getElementById('certificateBtn');
+  const certStatus=document.getElementById('certificateStatus');
+  if(certBtn && certStatus){
+    const done=progress>=100;
+    certBtn.style.display=done?'inline-block':'none';
+    certStatus.textContent=done?'Certificado liberado: você concluiu o percurso georreferenciado.':'Complete 100% do percurso para liberar o certificado de conclusão.';
+  }
   localStorage.setItem('vivaProgress',String(progress));
   localStorage.setItem('vivaDiscovered',JSON.stringify([...discovered]));
   renderPOI();
@@ -415,10 +424,27 @@ function registerPoiFromModal(){
  closePoiModal();
 }
 function finish(){
-  progress=100;update();showTab('pass');
+  if(progress<100){
+    showTab('pass');
+    alert('A conclusão será liberada quando o GPS registrar 100% do percurso da trilha.');
+    return;
+  }
+  update();showTab('pass');
   document.getElementById('passTitle').textContent='Trilha concluída!';
   document.getElementById('passText').textContent='Parabéns! Seu passaporte registra a conclusão da Trilha das Árvores Gigantes.';
   localStorage.setItem('vivaCompleted','1');
+}
+function printCertificate(){
+  if(progress<100){
+    alert('O certificado será liberado após a conclusão de 100% do percurso.');
+    return;
+  }
+  const name=(document.getElementById('visitorName').value||'Visitante').trim();
+  const date=new Date().toLocaleDateString('pt-BR');
+  const w=window.open('','_blank');
+  if(!w){alert('O navegador bloqueou a nova janela. Permita pop-ups para imprimir o certificado.');return;}
+  w.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Certificado de Conclusão - Viva a Trilha</title><style>@page{size:A4 landscape;margin:0}body{font-family:Georgia,serif;margin:0;background:#f5f1e7;color:#173523}.cert{box-sizing:border-box;width:100vw;min-height:100vh;padding:55px;display:flex;align-items:center;justify-content:center}.frame{width:90%;min-height:78vh;border:10px double #234d36;box-sizing:border-box;padding:55px;text-align:center;background:#fffdf8}.leaf{font-size:58px}.kicker{letter-spacing:3px;font-family:Arial,sans-serif;font-size:14px;color:#496b55}.title{font-size:42px;margin:18px 0 8px;color:#234d36}.name{font-size:34px;margin:24px 0 12px;font-weight:bold}.text{font-size:18px;line-height:1.6;max-width:760px;margin:0 auto}.line{width:240px;border-top:1px solid #78907e;margin:38px auto 8px}.date{font-family:Arial,sans-serif;color:#5d6d61;font-size:14px}@media print{body{background:white}.cert{min-height:100vh}}</style></head><body><div class="cert"><div class="frame"><div class="leaf">🌳</div><div class="kicker">PARQUE ESTADUAL DE PORTO FERREIRA</div><div class="title">CERTIFICADO DE CONCLUSÃO</div><p class="text">Certificamos que</p><div class="name">'+esc(name)+'</div><p class="text">concluiu o percurso georreferenciado da <b>Trilha das Árvores Gigantes</b>, registrando sua experiência no Passaporte da Trilha.</p><p class="text" style="margin-top:18px">Percurso registrado: <b>4,78 km</b></p><div class="line"></div><div class="date">Emitido em '+date+' · Viva a Trilha</div></div></div><script>window.onload=function(){window.print()}<\/script></body></html>');
+  w.document.close();
 }
 function saveDiary(){
   const text=document.getElementById('diaryText').value.trim();
