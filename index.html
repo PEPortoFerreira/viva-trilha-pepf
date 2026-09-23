@@ -152,7 +152,7 @@ function initMap(){
  L.marker(route[route.length-1]).addTo(map).bindPopup('<b>Fim da trilha</b>');
  pois.forEach((p,i)=>L.circleMarker([p.lat,p.lng],{radius:5}).addTo(map).bindPopup('<b>'+esc(p.name)+'</b><br>'+esc(p.description)));
 }
-function startTrail(){showTab('maptab');document.getElementById('gpsmsg').textContent='Ative o GPS para acompanhar sua posição.';}
+function startTrail(){showTab('maptab');document.getElementById('gpsmsg').textContent='Trilha iniciada! Ative o GPS para acompanhar sua posição.';document.getElementById('map').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{if(typeof map!=='undefined'){map.invalidateSize();}},300);}(){showTab('maptab');document.getElementById('gpsmsg').textContent='Ative o GPS para acompanhar sua posição.';}
 function locateMe(){
  if(!navigator.geolocation){setGps('GPS indisponível','Este navegador não oferece geolocalização.');return;}
  setGps('Solicitando GPS…','Permita a localização quando o navegador pedir.');
