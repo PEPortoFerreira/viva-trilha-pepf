@@ -141,7 +141,7 @@ input[type=file]{width:100%;padding:12px;border:1px dashed #b7c5b5;border-radius
 </section>
 
 <section id="discover">
-<div class="section-head"><div><h2>Descobertas</h2><div class="muted">Aproxime-se dos pontos do percurso para registrar novas descobertas.</div></div><b id="foundCount">0 encontrados</b></div>
+<div class="section-head"><div><h2>Descobertas</h2><div class="muted">Ative o GPS e aproxime-se dos pontos do percurso para liberar novas descobertas.</div></div><b id="foundCount">0 encontrados</b></div>
 <div class="poi-grid" id="poiList"></div>
 <div style="margin-top:18px"><h2>Fauna para observar</h2><div class="feature-grid" id="fauna"></div></div>
 </section>
@@ -298,6 +298,7 @@ function checkNearbyPOI(ll){
    if(d<nearestM){nearestM=d;nearest=p;}
  }
  if(nearest && nearestM<=35 && nearest.name!==lastDiscoveryName){
+   proximityUnlocked.add(nearest.name);
    const idx=pois.indexOf(nearest);
    if(idx>=0)openPoiModal(idx);
    lastDiscoveryName=nearest.name;
@@ -368,12 +369,15 @@ function openPoiModal(i){
  const p=pois[i]; if(!p)return;
  selectedPoiIndex=i;
  const found=discovered.has(p.name);
+ const unlocked=proximityUnlocked.has(p.name);
  document.getElementById('poiModalTitle').textContent=p.name;
  document.getElementById('poiModalText').textContent=p.description;
- document.getElementById('poiModalIcon').textContent=found?'✓':'🌿';
+ document.getElementById('poiModalIcon').textContent=found?'✓':(unlocked?'🌿':'🔒');
  const btn=document.getElementById('poiModalAction');
- btn.textContent=found?'Descoberta já registrada':'Registrar descoberta';
+ btn.textContent=found?'Descoberta já registrada':(unlocked?'Registrar descoberta':'Aproxime-se do ponto com o GPS');
  btn.style.display=found?'none':'inline-block';
+ btn.disabled=!unlocked;
+ btn.style.opacity=unlocked?'1':'.6';
  document.getElementById('poiModal').classList.add('open');
 }
 function closePoiModal(){
@@ -383,6 +387,10 @@ function closePoiModal(){
 function registerPoiFromModal(){
  if(selectedPoiIndex===null)return;
  const p=pois[selectedPoiIndex]; if(!p)return;
+ if(!proximityUnlocked.has(p.name)){
+   document.getElementById('poiModalText').textContent='Esta descoberta será liberada quando o GPS identificar que você está próximo deste ponto da trilha.';
+   return;
+ }
  discovered.add(p.name);
  update();
  renderDesafios();
@@ -416,6 +424,17 @@ function printPassport(){
   w.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Passaporte da Trilha</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:30px;border:2px solid #234d36;border-radius:20px;color:#173523}h1{margin-bottom:4px}h2{color:#234d36}.meta{color:#666}.box{padding:16px;background:#f4f7f4;border-radius:12px;margin:18px 0}li{margin:7px 0}@media print{body{margin:0;border:0}}</style></head><body><div style="text-align:center"><div style="font-size:48px">🌳</div><h1>Passaporte da Trilha</h1><div>Trilha das Árvores Gigantes · Parque Estadual de Porto Ferreira</div></div><div class="box"><h2>'+esc(name)+'</h2><div class="meta">Data: '+date+'</div><div class="meta">Percurso: 4,78 km (rota georreferenciada)</div><div class="meta">Progresso: '+Math.round(progress)+'%</div></div><h2>Descobertas registradas</h2><ul>'+items+'</ul><p style="margin-top:35px">Registro digital da experiência de visita.</p><script>window.onload=function(){window.print()}<\/script></body></html>');
   w.document.close();
 }
+const VIVA_APP_VERSION='2.1-gps-real-reset';
+if(localStorage.getItem('vivaAppVersion')!==VIVA_APP_VERSION){
+  // Limpa somente o progresso/desafios antigos de teste.
+  // Nome e diário do visitante permanecem preservados.
+  localStorage.removeItem('vivaGpsDistanceKm');
+  localStorage.removeItem('vivaProgress');
+  localStorage.removeItem('vivaDiscovered');
+  localStorage.removeItem('vivaCompleted');
+  localStorage.setItem('vivaAppVersion',VIVA_APP_VERSION);
+}
+const proximityUnlocked=new Set();
 function restoreLocalData(){
   try{
     gpsDistanceKm=Math.min(4.78,Math.max(0,Number(localStorage.getItem('vivaGpsDistanceKm')||0)));
