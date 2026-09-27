@@ -128,12 +128,14 @@ input[type=file]{width:100%;padding:12px;border:1px dashed #b7c5b5;border-radius
 @media(max-width:430px){.completion-stats{grid-template-columns:1fr 1fr}.completion-stat:last-child{grid-column:1/-1}}
 
 
-.offline-map-wrap{position:relative;width:100%;height:100%;overflow:hidden;background:#edf5e8}.offline-map-wrap svg{width:100%;height:100%;display:block}.offline-badge{position:absolute;z-index:3;top:10px;left:10px;background:#fff;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800;box-shadow:0 2px 8px #0002;letter-spacing:.2px}.offline-poi{cursor:pointer}.offline-poi text{pointer-events:none}.offline-poi:focus{outline:none}
+.offline-map-wrap{position:relative;width:100%;height:100%;overflow:hidden;background:#edf5e8}.offline-map-wrap svg{width:100%;height:100%;display:block}.offline-badge{position:absolute;z-index:3;top:10px;left:10px;background:#fff;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800;box-shadow:0 2px 8px #0002;letter-spacing:.2px}.offline-map-help{position:absolute;z-index:3;right:10px;top:10px;background:#ffffffdd;border:1px solid #dce8dd;border-radius:999px;padding:7px 10px;font-size:11px;color:#49604f;box-shadow:0 2px 8px #0001}.offline-poi{cursor:pointer}.offline-poi:focus{outline:none;filter:drop-shadow(0 0 4px #3182ce)}.offline-poi.is-found circle:first-child{filter:drop-shadow(0 1px 2px #245b3a55)} @media(max-width:520px){.offline-map-help{display:none}}
 </style><style>
 #diaryText,#visitorName{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;background:#fff}
 #diaryText{resize:vertical;min-height:130px}
 #passBar{display:block;height:100%;width:0;border-radius:999px;background:var(--green)}
 </style>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#234d36">
 </head>
 <body>
 <div class="app">
@@ -290,18 +292,27 @@ function offlineProject(ll){
  const y=lat=>h-(lat-minLat)/(maxLat-minLat)*h;
  return {w,h,x,y,minLat,maxLat,minLng,maxLng};
 }
+function routeProgressPoints(){
+ const frac=Math.max(0,Math.min(1,progress/100));
+ const count=Math.max(2,Math.round((route.length-1)*frac)+1);
+ return route.slice(0,count);
+}
 function drawOfflineMap(){
  const box=document.getElementById('map'); if(!box)return;
  const pr=offlineProject();
  const points=route.map(p=>pr.x(p[1]).toFixed(1)+','+pr.y(p[0]).toFixed(1)).join(' ');
+ const travelled=routeProgressPoints().map(p=>pr.x(p[1]).toFixed(1)+','+pr.y(p[0]).toFixed(1)).join(' ');
  const poisSvg=pois.map((p,i)=>{
    const cx=pr.x(p.lng), cy=pr.y(p.lat);
-   return `<g class="offline-poi" data-i="${i}" tabindex="0" onclick="openPoiModal(${i})"><circle cx="${cx}" cy="${cy}" r="7" fill="#fff" stroke="#276749" stroke-width="3"/><text x="${cx+10}" y="${cy+4}" font-size="11" fill="#1f2937">${esc(p.name)}</text></g>`;
+   const found=discovered.has(p.name);
+   return `<g class="offline-poi ${found?'is-found':''}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(p.name)}" onclick="openPoiModal(${i})" onkeydown="if(event.key==='Enter'||event.key===' ') {event.preventDefault();openPoiModal(${i})}"><circle cx="${cx}" cy="${cy}" r="9" fill="${found?'#2f855a':'#fff'}" stroke="#276749" stroke-width="3"/><circle cx="${cx}" cy="${cy}" r="3" fill="${found?'#fff':'#276749'}"/></g>`;
  }).join('');
- box.innerHTML=`<div class="offline-map-wrap"><div class="offline-badge">MAPA OFFLINE · GPS</div><svg id="offlineMapSvg" viewBox="0 0 ${pr.w} ${pr.h}" preserveAspectRatio="none" aria-label="Mapa offline da Trilha das Árvores Gigantes"><rect width="100%" height="100%" fill="#edf5e8"/><path d="M0 ${pr.h*.15} Q ${pr.w*.25} ${pr.h*.08} ${pr.w*.5} ${pr.h*.2} T ${pr.w} ${pr.h*.12}" fill="none" stroke="#c8d9bd" stroke-width="34" opacity=".45"/><polyline points="${points}" fill="none" stroke="#2f855a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${pr.x(route[0][1])}" cy="${pr.y(route[0][0])}" r="11" fill="#fff" stroke="#276749" stroke-width="4"/><text x="${pr.x(route[0][1])+14}" y="${pr.y(route[0][0])+5}" font-size="13" font-weight="700">INÍCIO</text><circle cx="${pr.x(route[route.length-1][1])}" cy="${pr.y(route[route.length-1][0])}" r="11" fill="#fff" stroke="#c53030" stroke-width="4"/><text x="${pr.x(route[route.length-1][1])+14}" y="${pr.y(route[route.length-1][0])+5}" font-size="13" font-weight="700">FIM</text>${poisSvg}<g id="offlineUser" style="display:none"><circle id="offlineAccuracy" cx="0" cy="0" r="18" fill="none" stroke="#3182ce" stroke-width="3" opacity=".25"/><circle id="offlineUserDot" cx="0" cy="0" r="8" fill="#3182ce" stroke="#fff" stroke-width="3"/></g></svg></div>`;
+ box.innerHTML=`<div class="offline-map-wrap"><div class="offline-badge">MAPA OFFLINE · GPS</div><div class="offline-map-help">Toque em um ponto para abrir a ficha</div><svg id="offlineMapSvg" viewBox="0 0 ${pr.w} ${pr.h}" preserveAspectRatio="none" aria-label="Mapa offline da Trilha das Árvores Gigantes"><rect width="100%" height="100%" fill="#edf5e8"/><path d="M0 ${pr.h*.15} Q ${pr.w*.25} ${pr.h*.08} ${pr.w*.5} ${pr.h*.2} T ${pr.w} ${pr.h*.12}" fill="none" stroke="#c8d9bd" stroke-width="34" opacity=".45"/><polyline points="${points}" fill="none" stroke="#a9c3aa" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><polyline id="offlineProgressLine" points="${travelled}" fill="none" stroke="#2f855a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>${poisSvg}<circle cx="${pr.x(route[0][1])}" cy="${pr.y(route[0][0])}" r="11" fill="#fff" stroke="#276749" stroke-width="4"/><text x="${pr.x(route[0][1])+14}" y="${pr.y(route[0][0])+5}" font-size="12" font-weight="700" fill="#234d36">INÍCIO</text><circle cx="${pr.x(route[route.length-1][1])}" cy="${pr.y(route[route.length-1][0])}" r="11" fill="#fff" stroke="#c53030" stroke-width="4"/><text x="${pr.x(route[route.length-1][1])+14}" y="${pr.y(route[route.length-1][0])+5}" font-size="12" font-weight="700" fill="#7b2b2b">FIM</text><g id="offlineUser" style="display:none"><circle id="offlineAccuracy" cx="0" cy="0" r="18" fill="none" stroke="#3182ce" stroke-width="3" opacity=".25"/><circle id="offlineUserDot" cx="0" cy="0" r="8" fill="#3182ce" stroke="#fff" stroke-width="3"/></g></svg></div>`;
  window.__offlineProject=pr;
+ if(window.__lastUserLL)updateOfflineUser(window.__lastUserLL);
 }
 function updateOfflineUser(ll){
+ lastUserLL=ll; window.__lastUserLL=ll;
  const g=document.getElementById('offlineUser'), dot=document.getElementById('offlineUserDot'), acc=document.getElementById('offlineAccuracy');
  if(!g||!dot)return;
  const pr=window.__offlineProject||offlineProject();
@@ -335,6 +346,7 @@ const desafios=[
 ];
 let gpsDistanceKm=Number(localStorage.getItem('vivaGpsDistanceKm')||0);
 let lastGpsPoint=null;
+let lastUserLL=null;
 
 function haversineKm(a,b){
  const R=6371, toRad=x=>x*Math.PI/180;
@@ -485,6 +497,7 @@ function update(){
   localStorage.setItem('vivaDiscovered',JSON.stringify([...discovered]));
   renderSelos();
   renderPOI();
+  if(document.getElementById('map')) drawOfflineMap();
 }
 const educationalNotes={'Trilha das Árvores Gigantes':'Ponto de interpretação da Trilha das Árvores Gigantes. Observe a paisagem e perceba as diferentes formas, alturas e texturas da vegetação ao longo do percurso.',
 'Pimenta de macaco':'Ponto de interpretação botânica da trilha. Observe a vegetação ao redor e compare folhas, formas e texturas sem retirar partes das plantas.',
@@ -820,5 +833,8 @@ restoreLocalData();renderFaunaFreeRecords();renderPOI();update();window.addEvent
     </div>
   </div>
 </div>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
+</script>
 </body>
 </html>
