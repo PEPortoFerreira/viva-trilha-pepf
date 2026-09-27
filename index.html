@@ -480,10 +480,10 @@ const educationalNotes={'Trilha das Árvores Gigantes':'Ponto de interpretação
 const seloDefs=[
  {icon:'🌿',name:'Explorador da Mata',desc:'Percorreu pelo menos 500 metros.',ok:()=>gpsDistanceKm>=0.5},
  {icon:'🐾',name:'Olhar de Fauna',desc:'Registrou pelo menos uma observação de fauna, mesmo que não esteja na lista.',ok:()=>faunaObserved.size>=1 || faunaFreeRecords.length>=1},
- {icon:'🌳',name:'Gigantes da Floresta',desc:'Descobriu o ponto do Jequitibá-rosa.',ok:()=>discovered.has('Jequitibá rosa')||discovered.has("Figueira, Pau d'alho, Peroba rosa e Jequitibá rosa")},
- {icon:'💧',name:'Guardião das Águas',desc:'Chegou a um ponto do Ribeirão dos Patos.',ok:()=>discovered.has('Entrada para o Ribeirão dos Patos')||discovered.has('Escadas Ribeirão dos Patos')},
+ {icon:'🌳',name:'Gigantes da Floresta',desc:'Registrou a passagem pelo ponto do Jequitibá-rosa, pelo GPS ou pela confirmação manual.',ok:()=>discovered.has('Jequitibá rosa')||discovered.has("Figueira, Pau d'alho, Peroba rosa e Jequitibá rosa")},
+ {icon:'💧',name:'Guardião das Águas',desc:'Registrou a passagem pelo Ribeirão dos Patos, pelo GPS ou pela confirmação manual.',ok:()=>discovered.has('Entrada para o Ribeirão dos Patos')||discovered.has('Escadas Ribeirão dos Patos')},
  {icon:'🥾',name:'Caminhante',desc:'Alcançou 1 km de percurso.',ok:()=>gpsDistanceKm>=1},
- {icon:'🌎',name:'Conhecedor da Trilha',desc:'Registrou todos os pontos educativos.',ok:()=>Object.keys(educationalNotes).every(n=>discovered.has(n))},
+ {icon:'🌎',name:'Conhecedor da Trilha',desc:'Registrou todos os pontos educativos pelo GPS ou pela confirmação manual.',ok:()=>Object.keys(educationalNotes).every(n=>discovered.has(n))},
  {icon:'🏆',name:'Trilha Completa',desc:'Concluiu 100% do percurso.',ok:()=>progress>=100}
 ];
 function renderSelos(){
@@ -561,7 +561,22 @@ function openPoiModal(i){
  btn.style.display=found?'none':'inline-block';
  btn.disabled=!unlocked;
  btn.style.opacity=unlocked?'1':'.6';
+ const manualBtn=document.getElementById('poiModalManual');
+ if(manualBtn){ manualBtn.style.display=found?'none':'inline-block'; }
  document.getElementById('poiModal').classList.add('open');
+}
+function confirmManualPoi(){
+ const p=pois[selectedPoiIndex];
+ if(!p)return;
+ if(discovered.has(p.name)){ closePoiModal(); return; }
+ const ok=confirm('Você passou por este ponto, mas o GPS não registrou?\n\nUse esta opção somente quando tiver realmente visitado o local durante a trilha.');
+ if(!ok)return;
+ discovered.add(p.name);
+ localStorage.setItem('vivaDiscovered',JSON.stringify([...discovered]));
+ update();
+ renderPOI();
+ closePoiModal();
+ alert('Passagem registrada manualmente. Este ponto agora conta para suas descobertas e selos.');
 }
 function closePoiModal(){
  document.getElementById('poiModal').classList.remove('open');
@@ -699,6 +714,7 @@ restoreLocalData();renderFaunaFreeRecords();renderPOI();update();window.addEvent
     <div id="poiModalLearn" style="margin-top:14px;padding:14px;border-radius:16px;background:#f4f8f4;color:#405247;line-height:1.5;font-size:14px"></div>
     <div class="discovery-modal-actions">
       <button class="primary" id="poiModalAction" onclick="registerPoiFromModal()">Registrar descoberta</button>
+      <button class="secondary" id="poiModalManual" onclick="confirmManualPoi()">✓ Passei por este ponto, mas o GPS não registrou</button>
       <button class="secondary" onclick="closePoiModal()">Fechar</button>
     </div>
   </div>
