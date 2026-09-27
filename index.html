@@ -245,6 +245,7 @@ input[type=file]{width:100%;padding:12px;border:1px dashed #b7c5b5;border-radius
 </div>
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
 <button id="finishBtn" class="primary" onclick="finish()" disabled>Complete a trilha para concluir</button>
+<button class="secondary" id="offlineCompleteBtn" onclick="confirmOfflineCompletion()">Concluí a trilha, mas o GPS não registrou tudo</button>
 <button class="secondary" onclick="printPassport()">Imprimir / salvar passaporte</button>
 <button id="certificateBtn" class="secondary" onclick="printCertificate()" style="display:none">Emitir certificado de conclusão</button>
 </div>
@@ -478,11 +479,11 @@ const educationalNotes={'Trilha das Árvores Gigantes':'Ponto de interpretação
 'Caminho restrito':'Trecho indicado como restrito no mapa. Não ultrapasse a área sinalizada e siga sempre pelo percurso permitido.'};
 
 const seloDefs=[
- {icon:'🌿',name:'Explorador da Mata',desc:'Percorreu pelo menos 500 metros.',ok:()=>gpsDistanceKm>=0.5},
+ {icon:'🌿',name:'Explorador da Mata',desc:'Percorreu pelo menos 500 metros.',ok:()=>gpsDistanceKm>=0.5 || progress>=100},
  {icon:'🐾',name:'Olhar de Fauna',desc:'Registrou pelo menos uma observação de fauna, mesmo que não esteja na lista.',ok:()=>faunaObserved.size>=1 || faunaFreeRecords.length>=1},
  {icon:'🌳',name:'Gigantes da Floresta',desc:'Registrou a passagem pelo ponto do Jequitibá-rosa, pelo GPS ou pela confirmação manual.',ok:()=>discovered.has('Jequitibá rosa')||discovered.has("Figueira, Pau d'alho, Peroba rosa e Jequitibá rosa")},
  {icon:'💧',name:'Guardião das Águas',desc:'Registrou a passagem pelo Ribeirão dos Patos, pelo GPS ou pela confirmação manual.',ok:()=>discovered.has('Entrada para o Ribeirão dos Patos')||discovered.has('Escadas Ribeirão dos Patos')},
- {icon:'🥾',name:'Caminhante',desc:'Alcançou 1 km de percurso.',ok:()=>gpsDistanceKm>=1},
+ {icon:'🥾',name:'Caminhante',desc:'Alcançou 1 km de percurso.',ok:()=>gpsDistanceKm>=1 || progress>=100},
  {icon:'🌎',name:'Conhecedor da Trilha',desc:'Registrou todos os pontos educativos pelo GPS ou pela confirmação manual.',ok:()=>Object.keys(educationalNotes).every(n=>discovered.has(n))},
  {icon:'🏆',name:'Trilha Completa',desc:'Concluiu 100% do percurso.',ok:()=>progress>=100}
 ];
@@ -594,6 +595,15 @@ function registerPoiFromModal(){
  renderDesafios();
  closePoiModal();
 }
+function confirmOfflineCompletion(){
+  const ok=confirm('Você percorreu a trilha inteira, mas o GPS não conseguiu registrar todo o percurso?\n\nUse esta opção somente se você realmente concluiu o percurso. Ela marca o percurso como 100% concluído, mesmo sem registro contínuo do GPS.\n\nAs descobertas e os selos de pontos específicos continuam dependendo do registro pelo GPS ou da confirmação manual de cada ponto.');
+  if(!ok)return;
+  progress=100;
+  localStorage.setItem('vivaProgress','100');
+  localStorage.setItem('vivaOfflineCompletion','1');
+  update();
+  finish();
+}
 function finish(){
   if(progress<100){ return; }
   update();showTab('pass');
@@ -654,7 +664,7 @@ function printPassport(){
   w.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Passaporte da Trilha</title><style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:30px;border:2px solid #234d36;border-radius:20px;color:#173523}h1{margin-bottom:4px}h2{color:#234d36}.meta{color:#666}.box{padding:16px;background:#f4f7f4;border-radius:12px;margin:18px 0}li{margin:7px 0}@media print{body{margin:0;border:0}}</style></head><body><div style="text-align:center"><div style="font-size:48px">🌳</div><h1>Passaporte da Trilha</h1><div>Trilha das Árvores Gigantes · Parque Estadual de Porto Ferreira</div></div><div class="box"><h2>'+esc(name)+'</h2><div class="meta">Data: '+date+'</div><div class="meta">Percurso: 4,78 km (rota georreferenciada)</div><div class="meta">Progresso: '+Math.round(progress)+'%</div></div><h2>Descobertas registradas</h2><ul>'+items+'</ul><p style="margin-top:35px">Registro digital da experiência de visita.</p><script>window.onload=function(){window.print()}<\/script></body></html>');
   w.document.close();
 }
-const VIVA_APP_VERSION='2.1-gps-real-reset';
+const VIVA_APP_VERSION='2.2-offline-confirmation';
 if(localStorage.getItem('vivaAppVersion')!==VIVA_APP_VERSION){
   // Limpa somente o progresso/desafios antigos de teste.
   // Nome e diário do visitante permanecem preservados.
